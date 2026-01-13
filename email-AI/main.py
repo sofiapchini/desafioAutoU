@@ -1,26 +1,44 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
+from fastapi import FastAPI, UploadFile, File, Form
+from typing import Optional
 app = FastAPI()
 
 @app.get("/")
 def root():
     return {"status": "ok"}
 
-class EmailInput(BaseModel):
-    text: str 
-
 @app.post("/analyze")
-def analisar_email(data: EmailInput):
-    texto = data.text.lower()
+async def analyze_email(
+    text: Optional[str] = Form(None),
+    file: Optional[UploadFile] = File(None)
+):
+    email_text = ""
 
-    if any(p in texto for p in ["suporte", "ajuda", "erro", "problema"]):
+    if text and text.strip():
+        email_text = text.strip()
+
+    elif file:
+        filename = file.filename.lower()
+
+        if filename.endswith(".txt"):
+            content = await file.read()
+            email_text = content.decode("utf-8")
+
+        else:
+            return {"error": "Formato de arquivo não suportado"}
+
+    else:
+        return {"error": "Envie um texto ou um arquivo"}
+    texto = email_text.lower()
+
+    if any(p in texto for p in ["status", "erro", "problema", "suporte", "ajuda"]):
         categoria = "Produtivo"
-        resp = ("Olá, recebemos sua solicitação e estamos trabalhando para resolvê-la.")
+        resposta = "Email produtivo detectado"
     else:
         categoria = "Improdutivo"
-        resp = "Olá, recebemos a sua mensagem. Estamos à disposição caso precise de algo"
+        resposta = "Email improdutivo detectado"
 
     return {
         "categoria": categoria,
-        "resposta": resp
+        "resposta_sugerida": resposta,
+        "preview": email_text[:300]
     }
