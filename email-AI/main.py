@@ -5,64 +5,51 @@ from typing import Optional
 from pypdf import PdfReader
 import os 
 import requests
+from openai import OpenAI
 
 from dotenv import load_dotenv
 load_dotenv()
-
 
 app = FastAPI()
 
 templates = Jinja2Templates(directory="templates")
 
-
-HF_TOKEN = os.getenv("HF_API_TOKEN")
-HF_MODEL = "google/flan-t5-large"
+client = OpenAI()
 
 def classificar_email_com_ia(texto: str) -> dict:
     prompt = f"""
-Classifique o email abaixo como Produtivo ou Improdutivo.
-Depois, sugira uma resposta curta e educada.
+Você é um assistente que classifica emails.
+
+Tarefa:
+1. Classifique o email como Produtivo ou Improdutivo.
+2. Sugira uma resposta curta e educada adequada à categoria.
 
 Email:
 {texto}
 
-Responda no formato:
+Responda EXATAMENTE no formato:
 Categoria: <Produtivo ou Improdutivo>
 Resposta: <texto>
 """
 
-    headers = {
-        "Authorization": f"Bearer {HF_TOKEN}"
-    }
-
-    payload = {
-        "inputs": prompt,
-        "parameters": {
-            "max_new_tokens": 150,
-            "temperature": 0.2
-        }
-    }
-
-    response = requests.post(
-        f"https://api-inference.huggingface.co/models/{HF_MODEL}",
-        headers=headers,
-        json=payload,
-        timeout=30
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "Você classifica emails e sugere respostas automáticas."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.2,
+        max_tokens=150
     )
 
-    response.raise_for_status()
-
-    output = response.json()
-
-    texto_saida = output[0]["generated_text"]
+    texto_saida = response.choices[0].message.content
 
     categoria = "Improdutivo"
     resposta = "Agradecemos sua mensagem."
 
     for line in texto_saida.splitlines():
-        if "categoria" in line.lower():
-            if "produtivo" in line.lower():
-                categoria = "Produtivo"
+        if "categoria" in line.lower() and "produtivo" in line.lower():
+            categoria = "Produtivo"
         if "resposta" in line.lower():
             resposta = line.split(":", 1)[-1].strip()
 
@@ -70,6 +57,7 @@ Resposta: <texto>
         "categoria": categoria,
         "resposta": resposta
     }
+
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -124,17 +112,30 @@ async def analyze_email(
 
     texto = " ".join(email_text.lower().split())
 
-    palavras_produtivas = [
-        "status", "erro", "problema", "suporte",
-        "ajuda", "acesso", "chamado"
-    ]
+    try:
+        resultado = classificar_email_com_ia(texto)
+        categoria = resultado["categoria"]
+        resposta = resultado["resposta"]
 
-    if any(p in texto for p in palavras_produtivas):
-        categoria = "Produtivo"
-        resposta = "Email produtivo detectado"
-    else:
-        categoria = "Improdutivo"
-        resposta = "Email improdutivo detectado"
+    except Exception as e:
+        print("ERRO:", e)
+
+        palavras_produtivas = [
+            "status",
+            "erro",
+            "problema",
+            "suporte",
+            "ajuda",
+            "acesso",
+            "chamado",
+        ]
+
+        if any(p in texto.lower() for p in palavras_produtivas):
+            categoria = "Produtivo"
+            resposta = "Recebemos sua solicitação e em breve retornaremos."
+        else:
+            categoria = "Improdutivo"
+            resposta = "Agradecemos sua mensagem."
 
     return templates.TemplateResponse(
         "index.html",
@@ -142,6 +143,6 @@ async def analyze_email(
             "request": request,
             "categoria": categoria,
             "resposta": resposta,
-            "preview": email_text[:300]
-        }
+            "preview": email_text[:300],
+        },
     )
