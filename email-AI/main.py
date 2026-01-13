@@ -3,10 +3,73 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional
 from pypdf import PdfReader
+import os 
+import requests
+
+from dotenv import load_dotenv
+load_dotenv()
+
 
 app = FastAPI()
 
 templates = Jinja2Templates(directory="templates")
+
+
+HF_TOKEN = os.getenv("HF_API_TOKEN")
+HF_MODEL = "google/flan-t5-large"
+
+def classificar_email_com_ia(texto: str) -> dict:
+    prompt = f"""
+Classifique o email abaixo como Produtivo ou Improdutivo.
+Depois, sugira uma resposta curta e educada.
+
+Email:
+{texto}
+
+Responda no formato:
+Categoria: <Produtivo ou Improdutivo>
+Resposta: <texto>
+"""
+
+    headers = {
+        "Authorization": f"Bearer {HF_TOKEN}"
+    }
+
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "max_new_tokens": 150,
+            "temperature": 0.2
+        }
+    }
+
+    response = requests.post(
+        f"https://api-inference.huggingface.co/models/{HF_MODEL}",
+        headers=headers,
+        json=payload,
+        timeout=30
+    )
+
+    response.raise_for_status()
+
+    output = response.json()
+
+    texto_saida = output[0]["generated_text"]
+
+    categoria = "Improdutivo"
+    resposta = "Agradecemos sua mensagem."
+
+    for line in texto_saida.splitlines():
+        if "categoria" in line.lower():
+            if "produtivo" in line.lower():
+                categoria = "Produtivo"
+        if "resposta" in line.lower():
+            resposta = line.split(":", 1)[-1].strip()
+
+    return {
+        "categoria": categoria,
+        "resposta": resposta
+    }
 
 
 @app.get("/", response_class=HTMLResponse)
