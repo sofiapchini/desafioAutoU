@@ -25,7 +25,7 @@ async def analyze_email(
 ):
     email_text = ""
 
-    if file:
+    if file and file.filename:
         filename = file.filename.lower()
 
         if filename.endswith(".txt"):

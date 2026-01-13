@@ -1,11 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <title>Email Classifier</title>
 </head>
 <body>
-    
+
+<h1>Email Classifier</h1>
+
+<form action="/analyze" method="post" enctype="multipart/form-data">
+  <p>
+    <textarea name="text" rows="6" cols="60"
+      placeholder="Cole o texto do email aqui"></textarea>
+  </p>
+
+  <p>
+    <input type="file" name="file">
+  </p>
+
+  <button type="submit">Analisar</button>
+</form>
+
+{% if categoria %}
+<hr>
+<h2>Resultado</h2>
+
+<p><strong>Categoria:</strong> {{ categoria }}</p>
+<p><strong>Resposta sugerida:</strong> {{ resposta }}</p>
+
+<h3>Texto analisado (preview)</h3>
+<pre>{{ preview }}</pre>
+{% endif %}
+
+{% if error %}
+<p style="color:red">{{ error }}</p>
+{% endif %}
+
 </body>
 </html>
