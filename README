@@ -1,7 +1,7 @@
 # Email Classifier AI
 
 Aplicação web para triagem automática de emails utilizando inteligência artificial.  
-O sistema classifica emails como **Produtivo** ou **Improdutivo** e sugere uma resposta curta e adequada, auxiliando equipes de suporte na priorização de atendimentos.
+O sistema classifica emails como Produtivo ou Improdutivo e sugere uma resposta curta e adequada, auxiliando equipes de suporte na priorização de atendimentos.
 
 
 ## Funcionalidades
@@ -26,4 +26,4 @@ O sistema classifica emails como **Produtivo** ou **Improdutivo** e sugere uma r
 
 ---
 
-**Atenção** Deve ser utilizado pelo Render (https://desafioautou.onrender.com/)
+**Atenção** Deve ser utilizado pelo Render https://desafioautou.onrender.com
