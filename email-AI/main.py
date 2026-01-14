@@ -158,6 +158,6 @@ async def analyze_email(
             "request": request,
             "categoria": categoria,
             "resposta": resposta,
-            "preview": email_text[:300],
+            "preview": email_text[:999],
         },
     )
