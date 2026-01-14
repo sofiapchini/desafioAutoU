@@ -1,0 +1,29 @@
+# Email Classifier AI
+
+Aplicação web para triagem automática de emails utilizando inteligência artificial.  
+O sistema classifica emails como **Produtivo** ou **Improdutivo** e sugere uma resposta curta e adequada, auxiliando equipes de suporte na priorização de atendimentos.
+
+
+## Funcionalidades
+
+- Classificação automática de emails
+- Geração de resposta sugerida
+- Entrada por texto ou upload de arquivo
+- Suporte a arquivos `.txt` e `.pdf`
+- Fallback automático sem uso de IA
+- Interface web simples
+
+
+## Tecnologias
+
+- Python
+- FastAPI
+- Jinja2
+- OpenAI API
+- pypdf
+- HTML e CSS
+- python-dotenv
+
+---
+
+**Atenção** Deve ser utilizado pelo Render (https://desafioautou.onrender.com/)
