@@ -18,11 +18,14 @@ client = OpenAI()
 
 def classificar_email_com_ia(texto: str) -> dict:
     prompt = f"""
-Você é um assistente que classifica emails.
+Você é um assistente responsável por TRIAGEM de emails de suporte.
 
-Tarefa:
-1. Classifique o email como Produtivo ou Improdutivo.
-2. Sugira uma resposta curta e educada adequada à categoria.
+Definições obrigatórias:
+- Email PRODUTIVO: contém pedido de ajuda, problema, erro, dúvida, solicitação, reclamação ou algo que exija ação da equipe.
+- Email IMPRODUTIVO: elogios, agradecimentos, mensagens genéricas, marketing, spam ou conteúdos que não exigem ação.
+
+Classifique o email abaixo como Produtivo ou Improdutivo.
+Depois, sugira uma resposta curta e educada adequada à categoria.
 
 Email:
 {texto}
@@ -48,9 +51,14 @@ Resposta: <texto>
     resposta = "Agradecemos sua mensagem."
 
     for line in texto_saida.splitlines():
-        if "categoria" in line.lower() and "produtivo" in line.lower():
-            categoria = "Produtivo"
-        if "resposta" in line.lower():
+        line_lower = line.lower()
+        if line_lower.startswith("categoria"):
+            if "improdutivo" in line_lower:
+                categoria = "Improdutivo"
+            elif "produtivo" in line_lower:
+                categoria = "Produtivo"
+
+        if line_lower.startswith("resposta"):
             resposta = line.split(":", 1)[-1].strip()
 
     return {
